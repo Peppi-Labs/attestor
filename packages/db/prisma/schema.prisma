@@ -1,0 +1,89 @@
+// Attestor — multi-tenant core schema (M0).
+// Tenant isolation is enforced at TWO layers:
+//   1. Application: every tenant query runs inside withOrg() which SET LOCAL app.current_org.
+//   2. Database: Postgres Row-Level Security policies (see migrations/*_rls) filter on "orgId".
+// Feature models (Secret, SpecVersion, RequirementState, Scan, ...) are added in later milestones.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  CONTRIBUTOR
+  VIEWER
+}
+
+model Org {
+  id        String   @id @default(cuid())
+  name      String
+  plan      String   @default("free")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members  Membership[]
+  projects Project[]
+  audits   AuditEvent[]
+}
+
+model User {
+  id            String       @id @default(cuid())
+  email         String       @unique
+  name          String?
+  image         String?
+  mfaEnabled    Boolean      @default(false)
+  mfaSecret     String? // encrypted TOTP secret (M0-4); never exposed
+  createdAt     DateTime     @default(now())
+  memberships   Membership[]
+}
+
+model Membership {
+  id        String   @id @default(cuid())
+  orgId     String
+  userId    String
+  role      Role     @default(VIEWER)
+  createdAt DateTime @default(now())
+
+  org  Org  @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([orgId, userId])
+  @@index([userId])
+}
+
+model Project {
+  id             String   @id @default(cuid())
+  orgId          String
+  name           String
+  // GitHub / site connection (populated in M1/M4)
+  repoFullName   String?
+  defaultBranch  String?
+  websiteUrls    String[] @default([])
+  onboardingStep Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  org Org @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId])
+}
+
+model AuditEvent {
+  id        String   @id @default(cuid())
+  orgId     String
+  actorId   String?
+  action    String
+  resource  String
+  metadata  Json     @default("{}")
+  createdAt DateTime @default(now())
+
+  org Org @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, createdAt])
+}

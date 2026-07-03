@@ -1,0 +1,35 @@
+# deps
+node_modules
+.pnp.*
+
+# builds
+.next
+dist
+out
+*.tsbuildinfo
+
+# turbo
+.turbo
+
+# env / secrets
+.env
+.env*.local
+!.env.example
+
+# prisma
+packages/db/prisma/*.db
+
+# logs
+*.log
+npm-debug.log*
+
+# os / editor
+.DS_Store
+.idea
+.vscode/*
+!.vscode/extensions.json
+
+# test / coverage
+coverage
+playwright-report
+test-results
