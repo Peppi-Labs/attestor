@@ -26,13 +26,15 @@ export const site = {
     foundedNote: "The team behind peppi.ai.",
   },
   contact: {
-    // CONFIRM email domain (corporate domain assumed).
-    support: "support@dashible.com",
-    privacy: "privacy@dashible.com",
-    legal: "legal@dashible.com",
-    security: "security@dashible.com",
-    sales: "sales@dashible.com",
+    // Uses the Dashible-owned peppi.ai domain (support@/privacy@ confirmed live on peppi.ai).
+    support: "support@peppi.ai",
+    privacy: "privacy@peppi.ai",
+    legal: "legal@peppi.ai",
+    security: "security@peppi.ai",
+    sales: "sales@peppi.ai",
   },
+  // Base URL of the product app that receives contact submissions + hosts the admin portal.
+  appApiBase: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
   legal: {
     effectiveDate: "July 3, 2026",
     lastUpdated: "July 3, 2026",

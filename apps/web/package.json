@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "create-admin": "tsx --env-file=../../packages/db/.env scripts/create-admin.ts"
   },
   "dependencies": {
     "@attestor/db": "*",
@@ -23,6 +24,7 @@
     "@types/react-dom": "^19.0.2",
     "eslint": "^9.17.0",
     "eslint-config-next": "^15.1.4",
+    "tsx": "^4.19.2",
     "typescript": "^5.7.3"
   }
 }

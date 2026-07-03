@@ -74,6 +74,51 @@ model Project {
   @@index([orgId])
 }
 
+// --- Platform (internal, NOT tenant-scoped) -------------------------------------
+// Contact submissions from the marketing site and the Dashible staff who review them.
+// These tables are global platform data, so they are intentionally NOT under tenant RLS.
+
+enum ContactStatus {
+  NEW
+  READ
+  ARCHIVED
+}
+
+model ContactSubmission {
+  id        String        @id @default(cuid())
+  name      String
+  email     String
+  message   String
+  source    String        @default("marketing") // where it came from
+  status    ContactStatus @default(NEW)
+  ip        String?
+  handledBy String? // AdminUser id who last actioned it
+  createdAt DateTime      @default(now())
+
+  @@index([status, createdAt])
+}
+
+model AdminUser {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime       @default(now())
+  lastLoginAt  DateTime?
+  sessions     AdminSession[]
+}
+
+model AdminSession {
+  id        String    @id @default(cuid())
+  admin     AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  adminId   String
+  tokenHash String    @unique // sha256 of the opaque cookie token
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+
+  @@index([adminId])
+}
+
 model AuditEvent {
   id        String   @id @default(cuid())
   orgId     String
