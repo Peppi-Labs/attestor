@@ -2,7 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   eslint: { ignoreDuringBuilds: true },
-  transpilePackages: ["@attestor/db"],
+  transpilePackages: ["@attestor/db", "@attestor/core"],
 };
 
 export default nextConfig;

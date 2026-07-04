@@ -1,9 +1,18 @@
 import { z } from "zod";
 import { prisma } from "@attestor/db";
+import { NOTIFY_EMAIL, sendMail } from "@/lib/mailer";
 
 export const dynamic = "force-dynamic";
 
 const ORIGIN = process.env.MARKETING_ORIGIN ?? "*";
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
 
 function cors(res: Response): Response {
   res.headers.set("Access-Control-Allow-Origin", ORIGIN);
@@ -66,15 +75,20 @@ export async function POST(request: Request) {
     return cors(Response.json({ ok: true }));
   }
 
+  const { name, email, message, source } = parsed.data;
   await prisma.contactSubmission.create({
-    data: {
-      name: parsed.data.name,
-      email: parsed.data.email,
-      message: parsed.data.message,
-      source: parsed.data.source ?? "marketing",
-      ip,
-    },
+    data: { name, email, message, source: source ?? "marketing", ip },
   });
+
+  // Notify the team. Non-blocking: a mail failure must not fail the submission.
+  sendMail({
+    to: NOTIFY_EMAIL,
+    subject: `New contact submission from ${name}`,
+    text: `From: ${name} <${email}>\nSource: ${source ?? "marketing"}\n\n${message}`,
+    html: `<p><strong>${escapeHtml(name)}</strong> &lt;${escapeHtml(email)}&gt; wrote via ${escapeHtml(
+      source ?? "marketing",
+    )}:</p><blockquote>${escapeHtml(message).replace(/\n/g, "<br>")}</blockquote>`,
+  }).catch((e) => console.error("[contact] notification failed:", e));
 
   return cors(Response.json({ ok: true }));
 }

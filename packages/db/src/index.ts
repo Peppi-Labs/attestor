@@ -35,13 +35,28 @@ if (process.env.NODE_ENV !== "production") {
  * RLS with FORCE ROW LEVEL SECURITY means even the table owner is filtered, so a
  * missing/incorrect orgId yields zero rows rather than a leak.
  */
-export async function withOrg<T>(
-  orgId: string,
-  fn: (tx: Omit<PrismaClient, "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends">) => Promise<T>,
-): Promise<T> {
+type Tx = Omit<
+  PrismaClient,
+  "$connect" | "$disconnect" | "$on" | "$transaction" | "$use" | "$extends"
+>;
+
+export async function withOrg<T>(orgId: string, fn: (tx: Tx) => Promise<T>): Promise<T> {
   if (!orgId) throw new Error("withOrg: orgId is required");
   return prisma.$transaction(async (tx) => {
     await tx.$executeRaw`SELECT set_config('app.current_org', ${orgId}, true)`;
+    return fn(tx);
+  });
+}
+
+/**
+ * Run with the identity context set, so a user may read their OWN membership rows
+ * (across orgs) and the orgs they belong to — without exposing other tenants' data.
+ * Used by the auth layer to resolve which orgs/roles a signed-in user has.
+ */
+export async function withUser<T>(userId: string, fn: (tx: Tx) => Promise<T>): Promise<T> {
+  if (!userId) throw new Error("withUser: userId is required");
+  return prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT set_config('app.current_user', ${userId}, true)`;
     return fn(tx);
   });
 }

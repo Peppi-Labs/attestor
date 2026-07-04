@@ -12,14 +12,20 @@
     "create-admin": "tsx --env-file=../../packages/db/.env scripts/create-admin.ts"
   },
   "dependencies": {
+    "@attestor/core": "*",
     "@attestor/db": "*",
     "next": "^15.1.4",
+    "nodemailer": "^6.9.16",
+    "otplib": "^12.0.1",
+    "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",
+    "@types/nodemailer": "^6.4.17",
+    "@types/qrcode": "^1.5.5",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",
     "eslint": "^9.17.0",
